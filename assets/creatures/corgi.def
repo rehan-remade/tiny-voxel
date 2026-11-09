@@ -1,0 +1,38 @@
+# Corgi — first sub-voxel (cellScale 0.5) creature; companion-sized forest
+# visitor. Parsed by creatures.cpp (key = value, '#' comments). Distances/
+# speeds are world voxels (1 vox = 10 cm) and voxels/second.
+
+model = corgi.cvx2
+
+# Locomotion. *_ref_speed measured from the authored gaits (corgi_build.py
+# guard output: walk 0.075 m stride over the stance sweep; gallop bound).
+walk_speed       = 1.8
+walk_ref_speed   = 1.84
+gallop_speed     = 14.0    # zippy little legs: 1.5x authored cadence when fleeing
+gallop_ref_speed = 9.43
+turn_speed       = 3.5     # rad/s yaw slew — nimble
+
+# Behaviour ranges (voxels). Friendlier envelope than wildlife: lets the
+# player get close before it startles.
+alert_dist  = 60
+flee_dist   = 25
+calm_dist   = 90
+wander_r    = 60
+# Mean seconds per calm state before rerolling (randomized +/-50%).
+# Graze plays the ground-sniff clip; corgis sniff often and nap briefly.
+graze_time  = 10
+idle_time   = 8
+
+# Navigation collision (voxels): 0.45 m wide, 0.7 m tall.
+collide_half   = 2
+collide_height = 7
+
+# Spawning: forest-edge visitor, alone or in pairs, rarer than deer.
+spawn_forest      = 1
+forest_min        = 0.30
+herd_chance       = 0.10
+group_min         = 1
+group_max         = 2
+population_target = 4
+population_radius = 500
+despawn_radius    = 700

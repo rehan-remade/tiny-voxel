@@ -1,0 +1,67 @@
+# Build output
+build/
+build-tracy/
+out/
+# Packaged game (CI's Package step; patch.json's "files")
+dist/
+
+# Tracy captures + CSV exports (tools/profile.ps1)
+profiles/
+*.tracy
+
+# IDE / editor / agent state (project skills in .claude/skills ARE shipped)
+.vs/
+.vscode/
+.idea/
+.claude/*
+!.claude/skills/
+*.user
+*.suo
+*.sln.iml
+
+# Code-signing artefacts (machine-specific)
+.cert-thumbprint.txt
+*.pfx
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Legacy cached world snapshot + sidecars + journal save (formats retired;
+# ignored so old files don't get committed)
+world.dat
+world.cache
+world.lights
+journal.dat
+# Player-edit region files (per-world save data) + any moved-aside backups
+region_*.dat
+region_*.dat.*
+# Per-world farm save (crops) + moved-aside/tmp backups
+farm.dat
+farm.dat.*
+# Per-session logs / stderr capture
+game.log.txt
+game.err.txt
+# Overlap-check harness output
+overlap.log.txt
+# /tune working values (bake into src/tweaks.h defaults when finalized)
+tune.cfg
+# Console command history (dev-console up/down recall, rewritten every submit)
+console_history.txt
+# Worldgen stats snapshots (regenerated every cold gen; diff vs baseline)
+worldgen_stats*.txt
+# Legacy debug log outputs (no longer wired up; kept ignored so they don't get re-committed)
+cavelog.txt
+shader_err.txt
+
+# Blender auto-save backups (art/**/*.blend1)
+*.blend1
+
+# Misc
+*.tmp
+*.log
+*.exe.recipe
+# Per-world explored-map save (fog of war)
+map.dat
+__pycache__/
+map.dat.*

@@ -1,0 +1,40 @@
+# Stag — forest ungulate. First creature; the reference for the format.
+# Parsed by creatures.cpp (key = value, '#' comments). Distances/speeds are
+# world voxels (1 vox = 10 cm) and voxels/second.
+
+model = stag.cvx2
+
+# Locomotion. *_ref_speed is the ground speed at which that clip plays with
+# zero foot-skate at 1.0x rate; the engine scales clip playback by
+# actual_speed / ref_speed. Values measured from the authored gait
+# (walk: 0.30 m stride over a 0.93 s stance).
+walk_speed       = 3.2
+walk_ref_speed   = 3.2
+gallop_speed     = 42.0
+gallop_ref_speed = 27.5   # measured from the authored gallop cadence (review)
+turn_speed       = 2.5     # rad/s yaw slew
+
+# Behaviour ranges (voxels).
+alert_dist  = 90          # player nearer => stop + Alert clip, face player
+flee_dist   = 45          # player nearer => gallop away
+calm_dist   = 130         # player farther => drop back to calm behaviour
+wander_r    = 80          # amble destinations picked within this radius
+# Mean seconds spent in each calm state before rerolling (randomized ±50%).
+graze_time  = 14
+idle_time   = 6
+
+# Navigation collision (voxels). The engine tests THREE boxes of this half-
+# width along the body axis spanning ~75% of the flipbook length, so the
+# long body can't clip into boulders while staying narrow enough for forest.
+collide_half   = 4
+collide_height = 14
+
+# Spawning.
+spawn_forest      = 1     # only spawn where tree density qualifies as forest
+forest_min        = 0.55  # min forest density (biome treeChance) for a herd cell
+herd_chance       = 0.18  # per 192-voxel lattice cell, scaled by forest density
+group_min         = 2     # herd size range per spawn event
+group_max         = 4
+population_target = 8     # soft cap on live stags near the player
+population_radius = 500
+despawn_radius    = 700   # hard cull beyond this

@@ -1,0 +1,11 @@
+{
+  "project": "rehan/tiny-voxel",
+  "version": "0.1.0",
+  "files": "dist",
+  "recipe": {
+    "mode": "standalone",
+    "components": [{ "id": "main", "file": "", "label": "Game files", "kind": "main" }],
+    "mappings": [{ "component": "main", "from": "", "to": "{profile}" }],
+    "launch": { "kind": "exe", "path": "{profile}/voxel.exe", "cwd": "{profile}" }
+  }
+}

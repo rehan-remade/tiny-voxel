@@ -1,0 +1,100 @@
+name: Build
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Windows
+    runs-on: windows-2022
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          lfs: false
+
+      # The game ships only assets/ from Git LFS (~5.5 MB). art/ (~380 MB of
+      # source art) isn't needed to build or run it, so it stays as pointers.
+      - name: Fetch the game's LFS assets
+        run: git lfs pull --include="assets/**"
+
+      - name: Set up Python
+        id: setup-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python build dependencies
+        run: python -m pip install --upgrade pip jinja2
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DPython_EXECUTABLE="${{ steps.setup-python.outputs.python-path }}"
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      # dist/ is the game as players get it. voxel.exe reads src/shaders/
+      # (render.cpp SHADER_DIR) and assets/ relative to its working folder,
+      # and writes its saves and logs beside them.
+      - name: Package
+        shell: pwsh
+        run: |
+          if (Test-Path dist) { Remove-Item dist -Recurse -Force }
+          New-Item -ItemType Directory dist/src | Out-Null
+          Copy-Item build/Release/voxel.exe dist/
+          Copy-Item -Recurse src/shaders dist/src/shaders
+          Copy-Item -Recurse assets dist/assets
+          # A Git LFS pointer in place of an asset would ship a broken game.
+          $pointers = @(Get-ChildItem dist -Recurse -File | Where-Object {
+            $_.Length -lt 1024 -and
+            (Get-Content -LiteralPath $_.FullName -TotalCount 1) -like 'version https://git-lfs.github.com/spec/*'
+          })
+          if ($pointers.Count) {
+            $pointers | ForEach-Object { Write-Output "::error::$($_.FullName) is a Git LFS pointer, not the file" }
+            exit 1
+          }
+          Get-ChildItem dist -Recurse -File | ForEach-Object {
+            '{0,12:N0}  {1}' -f $_.Length, [IO.Path]::GetRelativePath("$PWD/dist", $_.FullName)
+          }
+
+      - name: Set up MSVC tools
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+
+      # The static runtime (CMakeLists.txt) means players don't need the
+      # Visual C++ Redistributable: no vcruntime140.dll, msvcp140.dll or kin.
+      - name: Check voxel.exe needs no Visual C++ runtime
+        shell: pwsh
+        run: |
+          $report = dumpbin /nologo /dependents dist/voxel.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $report
+          $dlls = @($report | Where-Object { $_ -match '^\s+\S+\.dll\s*$' } | ForEach-Object { $_.Trim() })
+          if (-not $dlls.Count) {
+            Write-Output '::error::dumpbin listed no DLLs for voxel.exe'
+            exit 1
+          }
+          $runtime = @($dlls | Where-Object { $_ -match '^(vcruntime|msvcp|vcomp|concrt|ucrtbased)' })
+          if ($runtime.Count) {
+            Write-Output "::error::voxel.exe needs the Visual C++ runtime: $($runtime -join ', ')"
+            exit 1
+          }
+          Write-Output "voxel.exe needs only: $($dlls -join ', ')"
+
+      - name: Upload game
+        uses: actions/upload-artifact@v4
+        with:
+          name: tiny-voxel-windows
+          path: dist/
+          if-no-files-found: error
